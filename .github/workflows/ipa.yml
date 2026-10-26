@@ -26,7 +26,9 @@ jobs:
           npm run setup
 
       - name: Vérifier le code de l'appli (JavaScript)
-        run: npx expo export --platform ios --output-dir /tmp/check
+        run: |
+          set -o pipefail
+          npx expo export --platform ios --output-dir /tmp/check 2>&1 | tee export.log || { tail -15 export.log | while IFS= read -r l; do echo "::error::${l:0:900}"; done; exit 1; }
 
       - name: Générer le projet iOS
         run: npx expo prebuild --platform ios --clean --no-install
@@ -57,6 +59,7 @@ jobs:
         run: |
           echo "===== ERREURS ====="
           grep -E "error:|fatal|Error:" build.log | head -40 || true
+          grep -E "error:|fatal|Error:" build.log | sort -u | head -10 | while IFS= read -r l; do echo "::error::${l:0:900}"; done || true
           echo "===== FIN DU JOURNAL ====="
           tail -60 build.log || true
 
