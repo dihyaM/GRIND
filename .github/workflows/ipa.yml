@@ -1,0 +1,54 @@
+name: Fabriquer l'appli iPhone (IPA)
+
+# Lancement manuel : onglet Actions > « Fabriquer l'appli iPhone (IPA) » > Run workflow
+on:
+  workflow_dispatch:
+
+jobs:
+  ipa:
+    runs-on: macos-15
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Installer les dépendances
+        run: |
+          npm install
+          npm run setup
+
+      - name: Générer le projet iOS
+        run: npx expo prebuild --platform ios --clean --no-install
+
+      - name: Retirer les notifications à distance (non autorisées avec un identifiant Apple gratuit)
+        run: |
+          for f in ios/*/*.entitlements; do
+            /usr/libexec/PlistBuddy -c "Delete :aps-environment" "$f" || true
+          done
+
+      - name: Installer les pods
+        run: cd ios && pod install
+
+      - name: Compiler sans signature
+        run: |
+          WS=$(ls -d ios/*.xcworkspace | head -1)
+          SCHEME=$(basename "$WS" .xcworkspace)
+          xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' \
+            -archivePath build/app.xcarchive archive \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+
+      - name: Emballer en .ipa
+        run: |
+          mkdir -p Payload
+          cp -R build/app.xcarchive/Products/Applications/*.app Payload/
+          zip -qry LeCarnet.ipa Payload
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: LeCarnet-ipa
+          path: LeCarnet.ipa
+          retention-days: 30
