@@ -1,0 +1,38 @@
+{
+  "expo": {
+    "name": "Le Carnet",
+    "slug": "le-carnet-dy",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "backgroundColor": "#0F0D12",
+    "ios": {
+      "bundleIdentifier": "com.dy.lecarnet",
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.dy.lecarnet",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0F0D12"
+      }
+    },
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash.png",
+          "imageWidth": 220,
+          "backgroundColor": "#0F0D12"
+        }
+      ],
+      "expo-notifications",
+      "expo-secure-store",
+      "expo-font"
+    ]
+  }
+}

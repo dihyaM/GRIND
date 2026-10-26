@@ -1,0 +1,15 @@
+{
+  "name": "le-carnet",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "setup": "expo install react react-native expo-status-bar expo-font expo-haptics expo-notifications expo-secure-store expo-splash-screen react-native-svg react-native-safe-area-context @react-native-async-storage/async-storage @expo-google-fonts/bricolage-grotesque @expo-google-fonts/figtree @expo-google-fonts/jetbrains-mono && expo install --fix",
+    "start": "expo start",
+    "ios": "expo start --ios",
+    "build:ios": "eas build --platform ios --profile production --auto-submit"
+  },
+  "dependencies": {
+    "expo": "latest"
+  }
+}
