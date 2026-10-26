@@ -6,19 +6,27 @@ on:
 
 jobs:
   ipa:
-    runs-on: macos-15
-    timeout-minutes: 60
+    runs-on: macos-latest
+    timeout-minutes: 75
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Utiliser la dernière version de Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
 
       - name: Installer les dépendances
         run: |
           npm install
           npm run setup
+
+      - name: Vérifier le code de l'appli (JavaScript)
+        run: npx expo export --platform ios --output-dir /tmp/check
 
       - name: Générer le projet iOS
         run: npx expo prebuild --platform ios --clean --no-install
@@ -34,12 +42,30 @@ jobs:
 
       - name: Compiler sans signature
         run: |
+          set -o pipefail
           WS=$(ls -d ios/*.xcworkspace | head -1)
           SCHEME=$(basename "$WS" .xcworkspace)
           xcodebuild -workspace "$WS" -scheme "$SCHEME" -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' \
             -archivePath build/app.xcarchive archive \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM="" 2>&1 | tee build.log | grep -E "error:|warning: .*deprecated|\*\* (ARCHIVE|BUILD)" || true
+          test -d build/app.xcarchive/Products/Applications
+
+      - name: Résumé de l'erreur (si échec)
+        if: failure()
+        run: |
+          echo "===== ERREURS ====="
+          grep -E "error:|fatal|Error:" build.log | head -40 || true
+          echo "===== FIN DU JOURNAL ====="
+          tail -60 build.log || true
+
+      - name: Journal complet (si échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: journal-erreur
+          path: build.log
 
       - name: Emballer en .ipa
         run: |
