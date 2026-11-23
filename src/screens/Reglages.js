@@ -3,6 +3,7 @@ import { View, Text, Pressable, Share, Alert, StyleSheet } from 'react-native';
 import { useStore } from '../store';
 import { C, F } from '../theme';
 import { settings } from '../stats';
+import { gmailProspects } from '../seed';
 import { getKey, setKey } from '../coach';
 import { enableReminders, disableReminders } from '../notifications';
 import { Card, H2, Muted, Btn, Input, Row, T, Toggle } from '../ui';
@@ -18,7 +19,7 @@ export default function Reglages({ onClose }) {
     getKey().then(setK);
   }, []);
 
-  const step = (f, d) => update((X) => (X.settings = { ...settings(X), [f]: Math.max(1, Math.min(40, settings(X)[f] + d)) }));
+  const step = (f, d, lo = 1, hi = 40) => update((X) => (X.settings = { ...settings(X), [f]: Math.max(lo, Math.min(hi, settings(X)[f] + d)) }));
 
   const toggleNotif = async () => {
     if (st.notif) {
@@ -66,9 +67,10 @@ export default function Reglages({ onClose }) {
 
       <Card>
         <H2 style={{ fontSize: 19 }}>Mes objectifs par jour</H2>
-        <Stepper label="Prospects staffing" v={st.pro} onMinus={() => step('pro', -1)} onPlus={() => step('pro', 1)} />
-        <Stepper label="Prospects RH / CSE" v={st.orga} onMinus={() => step('orga', -1)} onPlus={() => step('orga', 1)} />
-        <Muted style={{ fontSize: 12.5 }}>Comptés sur 5 jours ouvrés. Le nombre de séances suit ton programme.</Muted>
+        <Stepper label="Prospects par jour" v={st.pro} onMinus={() => step('pro', -1)} onPlus={() => step('pro', 1)} />
+        <Stepper label="Pas par jour" v={`${st.pas / 1000}k`} onMinus={() => step('pas', -1000, 3000, 30000)} onPlus={() => step('pas', 1000, 3000, 30000)} />
+        <Stepper label="CA du mois (€)" v={`${st.ca / 1000}k`} onMinus={() => step('ca', -500, 500, 100000)} onPlus={() => step('ca', 500, 500, 100000)} />
+        <Muted style={{ fontSize: 12.5 }}>Prospects comptés sur 5 jours ouvrés. Le CA additionne les montants de tes missions dans l'onglet Équipe.</Muted>
       </Card>
 
       <Card>
@@ -77,7 +79,7 @@ export default function Reglages({ onClose }) {
           <Toggle label={st.notif ? 'Activés' : 'Désactivés'} on={st.notif} onPress={toggleNotif} />
         </Row>
         <Muted style={{ fontSize: 13.5 }}>
-          Du lundi au vendredi : prospection à 9 h et séance à 18 h. Jeudi midi : ta nouveauté. Dimanche 19 h : ton bilan.
+          Du lundi au vendredi : chasse à 9 h et séance à 18 h. Relances à J+3 et J+7 sans réponse. Jeudi midi : ta nouveauté. Dimanche 19 h : ton bilan.
         </Muted>
       </Card>
 
@@ -99,6 +101,16 @@ export default function Reglages({ onClose }) {
           />
           {!!key && <Btn small variant="ghost" title="Supprimer" onPress={async () => { await setKey(''); setK(''); }} />}
         </Row>
+      </Card>
+
+      <Card>
+        <H2 style={{ fontSize: 19 }}>Prospects Gmail</H2>
+        <Muted style={{ fontSize: 13.5 }}>Ajoute dans la Chasse les traiteurs, salles et agences trouvés dans ton Gmail (ceux déjà présents ne sont pas dupliqués).</Muted>
+        <Btn title="Importer les prospects Gmail" onPress={() => {
+          let n = 0;
+          update((X) => (n = gmailProspects(X)));
+          Alert.alert(n ? `${n} prospect${n > 1 ? 's' : ''} ajouté${n > 1 ? 's' : ''}` : 'Tout est déjà importé');
+        }} />
       </Card>
 
       <Card>
@@ -132,5 +144,5 @@ const Stepper = ({ label, v, onMinus, onPlus }) => (
 const sx = StyleSheet.create({
   st: { width: 38, height: 38, borderRadius: 19, backgroundColor: C.surface2, borderWidth: 1, borderColor: C.line, alignItems: 'center', justifyContent: 'center' },
   stT: { color: C.ink, fontFamily: F.bold, fontSize: 20 },
-  v: { color: C.ink, fontFamily: F.monoB, fontSize: 18, width: 30, textAlign: 'center' },
+  v: { color: C.ink, fontFamily: F.monoB, fontSize: 17, minWidth: 44, textAlign: 'center' },
 });

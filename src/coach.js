@@ -18,7 +18,7 @@ export const setKey = async (v) => {
 export async function askCoach(payload) {
   const key = await getKey();
   if (!key) throw new Error('Ajoute ta clé Claude dans Réglages pour activer le coach.');
-  const prompt = `Tu es le coach personnel de Dy, 32 ans, entrepreneuse à Paris (staffing événementiel et lancement d'une agence d'organisation d'événements qui démarche RH et CSE). Son objectif sport numéro 1 : faire grossir ses fessiers au maximum, puis progresser en tractions, explosivité et souplesse (grand écart). Elle suit aussi sa prospection et une activité nouvelle par semaine. Voici son bilan de semaine en JSON :
+  const prompt = `Tu es le coach personnel de Dy, 32 ans, entrepreneuse à Paris. Elle a lancé Róa, maison de réceptions, et démarche chaque jour 10 traiteurs, salles de réception ou agences pour leur fournir du personnel de service, d'accueil et de bar. Objectif sport : perdre du gras (séances qui brûlent un max, 10 000 pas par jour) tout en gardant 2 séances fessiers par semaine. Elle suit aussi une activité nouvelle par semaine. Voici son bilan de semaine en JSON :
 ${JSON.stringify(payload)}
 
 Écris-lui un retour en français, en la tutoyant, 120 à 170 mots, texte brut sans markdown ni emoji. Si le score est ≥ 70, félicite-la sincèrement en citant ce qu'elle a réussi. S'il est < 70, gronde-la franchement, comme un coach exigeant qui croit en elle : nomme précisément ce qui a manqué, pas d'excuses acceptées, jamais insultant. Termine par exactement 3 objectifs concrets pour la semaine prochaine, une ligne chacun, commençant par "→ ". Si la semaine est en cours, parle de ce qu'il lui reste à faire d'ici dimanche.`;

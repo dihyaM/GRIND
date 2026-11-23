@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { AppState } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { migrate } from './seed';
 
 const KEY = 'carnet-dy-v1';
 const Ctx = createContext(null);
@@ -25,6 +26,9 @@ export function StoreProvider({ children }) {
         } catch (e) {
           ref.current = {};
         }
+        try {
+          migrate(ref.current);
+        } catch (e) {}
       })
       .finally(() => setReady(true));
     const sub = AppState.addEventListener('change', (s) => {
@@ -47,6 +51,9 @@ export function StoreProvider({ children }) {
   const replaceAll = useCallback(
     (data) => {
       ref.current = data || {};
+      try {
+        migrate(ref.current);
+      } catch (e) {}
       setV((v) => v + 1);
       save();
     },

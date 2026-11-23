@@ -43,7 +43,7 @@ export default function Bilan({ week, setWeek, openSettings }) {
   weeks.forEach((ww) => {
     const x = weekStats(D, ww);
     ses += x.sDone;
-    pros += x.pro + x.orga;
+    pros += x.pro;
     nvs += x.nvDone ? 1 : 0;
     if (x.has && ww <= mon(today())) {
       sum += x.score;
@@ -69,9 +69,9 @@ export default function Bilan({ week, setWeek, openSettings }) {
         <H2 style={{ fontSize: 19 }}>Détail</H2>
         <Line l="Sport" pct={s.c.sport} v={`${s.sDone}/${s.planned}`} />
         <Line l="Prospection" pct={s.c.pro} v={`${s.pro}/${s.proT}`} />
-        <Line l="Orga RH/CSE" pct={s.c.orga} v={`${s.orga}/${s.orgaT}`} />
+        <Line l="Pas" pct={s.c.pas} v={s.pasAvg ? `${Math.round(s.pasAvg / 100) / 10}k/j` : '–'} />
         <Line l="Nouveauté" pct={s.c.nv} v={s.nvDone ? '1/1' : '0/1'} />
-        <Muted style={{ fontSize: 12 }}>Poids : sport 35 %, prospection 30 %, orga 20 %, nouveauté 15 %.</Muted>
+        <Muted style={{ fontSize: 12 }}>Poids : sport 35 %, prospection 35 %, pas 15 %, nouveauté 15 %. Points de chasse cette semaine : {s.pts}.</Muted>
       </Card>
 
       <Card>

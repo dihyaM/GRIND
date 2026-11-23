@@ -14,7 +14,8 @@ import { add, fmt, mon, today, wd, isoWeek } from './src/dates';
 import { weekStats } from './src/stats';
 import { Bar, tap } from './src/ui';
 import Sport from './src/screens/Sport';
-import Prospects from './src/screens/Prospects';
+import Chasse from './src/screens/Chasse';
+import Equipe from './src/screens/Equipe';
 import Nouveau from './src/screens/Nouveau';
 import Bilan from './src/screens/Bilan';
 import Reglages from './src/screens/Reglages';
@@ -45,8 +46,8 @@ const Splash = () => (
 
 const TABS = [
   { id: 'sport', label: 'Sport', d: 'M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12' },
-  { id: 'pro', label: 'Prospection', d: 'M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2' },
-  { id: 'orga', label: 'Orga', d: 'M4 20V9l8-5 8 5v11M9 20v-6h6v6' },
+  { id: 'pro', label: 'Chasse', d: 'M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10M12 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2' },
+  { id: 'team', label: 'Équipe', d: 'M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7M2.5 20a6.5 6.5 0 0 1 13 0M16 4.5a3.5 3.5 0 0 1 0 6.5M18.5 14a6.5 6.5 0 0 1 3 6' },
   { id: 'nouveau', label: 'Nouveauté', d: 'M12 3l2.6 5.6L20 9.5l-4 4 1 5.5-5-2.8-5 2.8 1-5.5-4-4 5.4-.9z' },
   { id: 'bilan', label: 'Bilan', d: 'M4 20h16M7 16v-5M12 16V7M17 16v-8' },
 ];
@@ -122,15 +123,15 @@ function Main() {
                 </View>
                 <View style={st.strip}>
                   <Meter k="Séances" v={s.sDone} t={`/${s.planned}`} pct={s.c.sport} />
-                  <Meter k="Prospection" v={s.pro} t={`/${s.proT}`} pct={s.c.pro} />
-                  <Meter k="Orga RH/CSE" v={s.orga} t={`/${s.orgaT}`} pct={s.c.orga} />
+                  <Meter k="Chasse" v={s.pro} t={`/${s.proT}`} pct={s.c.pro} />
+                  <Meter k="Pas / jour" v={s.pasAvg ? `${Math.round(s.pasAvg / 100) / 10}k` : '–'} t="" pct={s.c.pas} />
                   <Meter k="Nouveauté" v={s.nvDone ? 'Faite' : 'À faire'} t="" pct={s.c.nv} />
                 </View>
               </View>
 
               {tab === 'sport' && <Sport {...props} />}
-              {tab === 'pro' && <Prospects key="pro" list="pro" {...props} />}
-              {tab === 'orga' && <Prospects key="orga" list="orga" {...props} />}
+              {tab === 'pro' && <Chasse {...props} />}
+              {tab === 'team' && <Equipe {...props} />}
               {tab === 'nouveau' && <Nouveau {...props} />}
               {tab === 'bilan' && <Bilan {...props} />}
             </>

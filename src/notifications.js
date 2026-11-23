@@ -20,8 +20,8 @@ const weekly = (weekday, hour, minute) => ({
 
 const PLAN = [
   ...[2, 3, 4, 5, 6].map((d) => ({
-    title: '10 prospects aujourd’hui',
-    body: 'Appels, mails, relances. On ne lâche rien avant midi.',
+    title: 'La chasse est ouverte',
+    body: '10 traiteurs, salles ou agences aujourd’hui. Ta flamme compte sur toi.',
     trigger: weekly(d, 9, 0),
   })),
   ...[2, 3, 4, 5, 6].map((d) => ({
@@ -47,4 +47,31 @@ export async function enableReminders() {
 
 export async function disableReminders() {
   await Notifications.cancelAllScheduledNotificationsAsync();
+}
+
+// Relances automatiques : J+3 et J+7 après un contact sans réponse.
+const at = (days, hour = 10) => {
+  const d = new Date();
+  d.setDate(d.getDate() + days);
+  d.setHours(hour, 0, 0, 0);
+  return d;
+};
+export async function cancelRelance(id) {
+  for (const j of [3, 7]) {
+    try {
+      await Notifications.cancelScheduledNotificationAsync(`rel-${id}-${j}`);
+    } catch (e) {}
+  }
+}
+export async function scheduleRelance(p) {
+  await cancelRelance(p.id);
+  for (const j of [3, 7]) {
+    try {
+      await Notifications.scheduleNotificationAsync({
+        identifier: `rel-${p.id}-${j}`,
+        content: { title: `${p.nom} n'a pas répondu`, body: j === 3 ? 'Ça fait 3 jours. On relance ? Le mail est prêt dans la Chasse.' : 'Une semaine sans réponse. Une relance ou un appel ?' },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at(j) },
+      });
+    } catch (e) {}
+  }
 }

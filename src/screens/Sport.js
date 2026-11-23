@@ -4,7 +4,8 @@ import { useStore } from '../store';
 import { C, F } from '../theme';
 import { DN, DNL, fmt, mon, today, wd } from '../dates';
 import { DEFAULT_PROG } from '../program';
-import { sessFor, dayDoc, ensureSport, prevLoad, totalSessions, weekStats, streak, dayDot, clone, prog } from '../stats';
+import { sessFor, dayDoc, ensureSport, prevLoad, totalSessions, weekStats, streak, dayDot, clone, prog, settings } from '../stats';
+import { Bar } from '../ui';
 import { Card, H2, Eyebrow, Mono, Muted, Btn, Check, DayStrip, Input, Row, T, Toggle, tap } from '../ui';
 
 export default function Sport({ week, day, setDay }) {
@@ -51,7 +52,7 @@ export default function Sport({ week, day, setDay }) {
           </Eyebrow>
           <H2>Jour de repos</H2>
           <Muted style={{ textAlign: 'center' }}>
-            Récupération, marche et 10 min d'étirements grand écart. Les fessiers grossissent aussi les jours off.
+            Repos actif : tes 10 000 pas (une grande marche, c’est parfait) et 10 min d’étirements. Les fessiers grossissent aussi les jours off.
           </Muted>
         </Card>
       ) : (
@@ -97,6 +98,8 @@ export default function Sport({ week, day, setDay }) {
         </Card>
       )}
 
+      <Corps day={day} />
+
       <Card>
         <Row style={{ justifyContent: 'space-between' }}>
           <H2 style={{ fontSize: 20 }}>Compteur</H2>
@@ -122,6 +125,83 @@ export default function Sport({ week, day, setDay }) {
         })}
       </Card>
     </View>
+  );
+}
+
+function Corps({ day }) {
+  const { D, update } = useStore();
+  const st = settings(D);
+  const pas = Number(dayDoc(D, day).pas) || 0;
+  const b = (D.body || {})[day] || {};
+  const setPas = (v) => update((X) => ((X['d-' + day] = X['d-' + day] || {}).pas = v.replace(/\D/g, '')));
+  const setB = (f, v) => update((X) => (((X.body = X.body || {})[day] = { ...(X.body[day] || {}) })[f] = v.replace(',', '.')));
+  const weigh = Object.keys(D.body || {})
+    .filter((k) => parseFloat(D.body[k].poids) > 0)
+    .sort()
+    .map((k) => ({ k, v: parseFloat(D.body[k].poids) }));
+  const first = weigh[0];
+  const last = weigh[weigh.length - 1];
+  const diff = first && last && weigh.length > 1 ? Math.round((last.v - first.v) * 10) / 10 : null;
+  const pts = weigh.slice(-8);
+  const lo = Math.min(...pts.map((x) => x.v));
+  const hi = Math.max(...pts.map((x) => x.v));
+  const lastOf = (f) => {
+    const k = Object.keys(D.body || {}).filter((x) => parseFloat(D.body[x][f]) > 0).sort().pop();
+    return k ? `${D.body[k][f]} cm (${fmt(k)})` : 'pas encore mesuré';
+  };
+  return (
+    <Card>
+      <H2 style={{ fontSize: 20 }}>Mon corps</H2>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <T style={{ flex: 1 }}>Pas du jour</T>
+        <Input value={pas ? String(pas) : ''} onChangeText={setPas} keyboardType="number-pad" placeholder="0" style={{ width: 96, textAlign: 'right', fontFamily: F.monoB }} />
+      </Row>
+      <Bar pct={pas / st.pas} h={7} />
+      <Muted style={{ fontSize: 12.5 }}>
+        Objectif {st.pas.toLocaleString('fr-FR')} pas. Recopie le chiffre de l’appli Santé de ton iPhone le soir.
+      </Muted>
+      <View style={{ height: 1, backgroundColor: C.line }} />
+      <Row style={{ justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <T>Poids</T>
+          <Muted style={{ fontSize: 12 }}>Une fois par semaine, le même jour, le matin à jeun.</Muted>
+        </View>
+        <Input value={b.poids || ''} onChangeText={(v) => setB('poids', v)} keyboardType="decimal-pad" placeholder="kg" style={{ width: 80, textAlign: 'right', fontFamily: F.monoB }} />
+      </Row>
+      {pts.length > 1 && (
+        <View style={{ gap: 6 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 70 }}>
+            {pts.map((x, i) => (
+              <View key={x.k} style={{ flex: 1, alignItems: 'center', gap: 3 }}>
+                <Text style={{ color: i === pts.length - 1 ? C.ink : C.muted, fontFamily: F.mono, fontSize: 9.5 }}>{x.v}</Text>
+                <View style={{ width: '70%', height: hi > lo ? 10 + ((x.v - lo) / (hi - lo)) * 40 : 30, borderRadius: 6, backgroundColor: i === pts.length - 1 ? C.accent : C.surface2 }} />
+              </View>
+            ))}
+          </View>
+          {diff != null && (
+            <Text style={{ color: diff <= 0 ? C.ok : C.warn, fontFamily: F.bold, fontSize: 14 }}>
+              {diff <= 0 ? `${Math.abs(diff)} kg de perdus` : `+${diff} kg`} depuis le {fmt(first.k)}
+            </Text>
+          )}
+        </View>
+      )}
+      <View style={{ height: 1, backgroundColor: C.line }} />
+      <Muted style={{ fontSize: 12.5 }}>Mensurations une fois par mois : comme tu prends des fessiers, la balance seule peut mentir.</Muted>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <T>Tour de taille</T>
+          <Muted style={{ fontSize: 12 }}>Dernier : {lastOf('taille')}</Muted>
+        </View>
+        <Input value={b.taille || ''} onChangeText={(v) => setB('taille', v)} keyboardType="decimal-pad" placeholder="cm" style={{ width: 80, textAlign: 'right', fontFamily: F.monoB }} />
+      </Row>
+      <Row style={{ justifyContent: 'space-between' }}>
+        <View style={{ flex: 1 }}>
+          <T>Tour de hanches</T>
+          <Muted style={{ fontSize: 12 }}>Dernier : {lastOf('hanches')}</Muted>
+        </View>
+        <Input value={b.hanches || ''} onChangeText={(v) => setB('hanches', v)} keyboardType="decimal-pad" placeholder="cm" style={{ width: 80, textAlign: 'right', fontFamily: F.monoB }} />
+      </Row>
+    </Card>
   );
 }
 
